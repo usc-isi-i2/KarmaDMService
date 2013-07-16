@@ -1,0 +1,1 @@
+timestamp,minute_of_hour,hour_of_day,day_of_week,latitude,longitude,direction_of_movement

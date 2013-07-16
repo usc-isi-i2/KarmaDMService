@@ -1,0 +1,1 @@
+index,timestamp,hour_of_day,day_of_week,GPS_timestamp,latitude,longitude,altitude,Accuracy,bearing,speed

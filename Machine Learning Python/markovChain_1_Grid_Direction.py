@@ -3,15 +3,6 @@ import csv
 from collections import defaultdict
 from fileinfo import filename, files
 
-# filename = "test/sample/sample_data_%d.txt"
-# filename = "../extracted_data/860173015670486/sample/sample_data_%d.txt"
-# files = range(1, 25)
-# filename = "../extracted_data/863101010131862/sample/sample_data_%d.txt"
-# files = range(1, 5)
-# filename = "../extracted_data/863101010249847/sample/sample_data_%d.txt"
-# files = range(1, 6)
-# filename = "../extracted_data/863101010336255/sample/sample_data_%d.txt"
-# files = range(1, 7)
 shouldIgnoreRepetitions = True
 shouldIgnoreAddedOnly = True
 shouldPrintPredictions = False
@@ -58,7 +49,6 @@ class LocationPrecitionModel:
     
     def train(self, train_files):
         last = '$'
-        #self.counts_uni['$'] = len(train_files)
         d = []
         for file in train_files:
             d = d + self.data[file]
@@ -75,18 +65,6 @@ class LocationPrecitionModel:
             if self.counts_uni[e] > maxCount:
                 self.mostFrequentlyVisited = e[0]
                 maxCount = self.counts_uni[e]
-    #####################################
-    # print "Unigram Counts:"
-    # print
-    # for t in self.counts_uni:
-    #     print t, self.counts_uni[t]
-    # print
-    # print "Bigram Counts:"
-    # print
-    # for t in self.counts_bi:
-    #     print t, self.counts_bi[t]
-    # print
-    #####################################
     
     def test(self, test_files):
         t = []
@@ -162,8 +140,6 @@ class LocationPrecitionModel:
         for train_files, test_files in sets:
             self.resetTrainedModel()
             self.train(train_files)
-            # for e in self.counts_uni:
-            # print e, self.counts_uni[e]
             accuracy = self.test(test_files)
             if accuracy > maxAccuracy:
                 maxAccuracy = accuracy
@@ -203,18 +179,6 @@ class LocationPrecitionModel:
             print x
         print "\nTotal:", len(c)
 
-def find_accuracy():
-    sum = 0
-    filenames = ["../extracted_data/860173015670486/sample/sample_data_%d.txt", "../extracted_data/863101010131862/sample/sample_data_%d.txt", "../extracted_data/863101010249847/sample/sample_data_%d.txt", "../extracted_data/863101010336255/sample/sample_data_%d.txt"]
-    files = [range(1, 25), range(1, 5), range(1, 6), range(1, 7)]
-    for i in range(4):
-        model = LocationPrecitionModel(files[i], filenames[i], latLabel, longLabel, dirLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldIgnoreAddedOnly, verbose=False)
-        model.readFiles()
-        maxAccuracy, bestSet, avgAccuracy = model.crossValidate(sequential=True)
-        sum = sum + avgAccuracy
-        print avgAccuracy
-    print sum/4
-
 def main():
     model = LocationPrecitionModel(files, filename, latLabel, longLabel, dirLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldIgnoreAddedOnly, verbose)
     model.readFiles()
@@ -237,8 +201,6 @@ def main():
     print "Test files:", bestSet[1]
     print "Average accuracy [excluding first day's predictions]:", avgAccuracy
     print
-#model.printUniqueLocations()
-#model.printData()
 
 if __name__ == '__main__':
     main()

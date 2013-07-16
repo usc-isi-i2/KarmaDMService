@@ -1,0 +1,3 @@
+timestamp,hour_of_day,day_of_week,latitude,longitude,original-data,direction_of_movement
+1366257866755,13,Thursday,23.16386792,113.51528865,1,$
+1366268934426,16,Thursday,23.08789009,113.52165334,1,W
