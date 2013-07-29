@@ -43,6 +43,22 @@
 
 ###############################################################################
 
+##############################################################################################################
+###
+### DESCRIPTION:
+###
+### This script takes the GPS data files created by cleanAndConvertData.py (converted/converted_data_<i>.txt)
+### [where i represents the day number for a particular user]
+### and does the following:
+###   * run Google Directions service on consecutive pairs of points and add the points returned
+###     to the original data
+###   * add a binary field "original-data" which has value 0 if the point is added by this script to the data
+###     and 1 if the point was present in the raw data
+###   * extract timestamp, hour-of-day, day-of-week, latitude, longitude, original-data fields and create
+###     a new data file
+###
+##############################################################################################################
+
 import urllib
 import csv
 import json
@@ -55,6 +71,8 @@ oppositeDirection = {'N': 'S', 'S': 'N', 'E': 'W', 'W': 'E', 'NE': 'SW', 'SW': '
                         'SE': 'NW', 'NW': 'SE', 'stat': '--'}
 
 def getDirection(lat1, long1, lat2, long2):
+    """Returns the direction from point (lat1, long1) to point (lat2, long2)"""
+    
     direction = ''
     if lat1 == lat2 and long1 == long2:
         direction = 'stat'
@@ -81,7 +99,8 @@ def getDirection(lat1, long1, lat2, long2):
     return direction
 
 def filter(points, latA, longA, latB, longB):
-    # a more precise filter required (180 degrees difference in direction?)
+    """This filters out the points on the route from A to B that lie beyond A in B->A direction and beyond B in A->B direction"""
+    
     dirAB = getDirection(latA, longA, latB, longB)
     if dirAB == 'stat':
         return []
@@ -96,7 +115,8 @@ def filter(points, latA, longA, latB, longB):
         j = j - 1
     return points[i:(j + 1)]
 
-threshold = 120 * 60000  # 120min or 2hr
+threshold = 120 * 60000
+# 120min or 2hr of time difference threshold is used to determine if approximation can be made on the route taken by the user
 req = "http://maps.googleapis.com/maps/api/directions/json?origin=%s,%s&destination=%s,%s&sensor=false"
 n1 = raw_input("Enter start file_number: ")
 n2 = raw_input("Enter end file_number: ")
@@ -132,6 +152,7 @@ for n in range(int(n1), int(n2) + 1):
         ts = int(table[i][tsIdx])
         timegap = int(table[i+1][tsIdx]) - ts
         if timegap <= threshold:
+            # Find both the routes A->B and B->A and use the one that has shorter overall distance
             req1 = urllib.urlopen(req % (table[i][latIdx], table[i][longIdx],
                                          table[i+1][latIdx], table[i+1][longIdx]))
             req2 = urllib.urlopen(req % (table[i+1][latIdx], table[i+1][longIdx],
@@ -143,8 +164,9 @@ for n in range(int(n1), int(n2) + 1):
             j = j1
             if j2['routes'][0]['legs'][0]['distance']['value'] < j['routes'][0]['legs'][0]['distance']['value']:
                 j = j2
+            # j now has the route with the shortest distance between A and B
             polyline = j['routes'][0]['overview_polyline']['points']
-            points = decode_line(polyline)
+            points = decode_line(polyline)  # returns a list of points by decoding the polyline string
             filtered_points = filter(points, float(table[i][latIdx]), float(table[i][longIdx]), float(table[i+1][latIdx]), float(table[i+1][longIdx]))
             step = timegap / (len(filtered_points) + 1)
             t = ts + step

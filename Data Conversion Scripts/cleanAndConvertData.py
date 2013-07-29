@@ -43,6 +43,20 @@
 
 ###############################################################################
 
+########################################################################################################
+###
+### DESCRIPTION:
+###
+### This script takes the raw GPS data files provided by Huawei (renamed as project_gps_edited_<i>.txt)
+### [where i represents the day number for a particular user]
+### and does the following:
+###   * remove rows which have status (and not location) data
+###   * convert the file from '|' separated to ',' separated format
+###   * extract and add hour-of-day and day-of-week information from timestamp
+###   * add column names
+###
+########################################################################################################
+
 import datetime
 n1 = raw_input("Enter start file_number: ")
 n2 = raw_input("Enter end file_number: ")

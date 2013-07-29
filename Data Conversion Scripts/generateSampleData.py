@@ -43,12 +43,27 @@
 
 ###############################################################################
 
+########################################################################################################
+###
+### DESCRIPTION:
+###
+### This script takes the GPS data files created by populateData.py (populated/populated_data_<i>.txt)
+### [where i represents the day number for a particular user]
+### and adds direction-of-movement feature to it
+###
+### NOTE: The scripts can be merged into a single script but I divided them to keep the conversions
+###       separate.
+###
+########################################################################################################
+
 import urllib
 import csv
 import json
 import math
 
 def getDirection(lat1, long1, lat2, long2):
+    """Returns the direction from point (lat1, long1) to point (lat2, long2)"""
+    
     direction = ''
     if lat1 == lat2 and long1 == long2:
         direction = 'stat'
