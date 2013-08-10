@@ -43,23 +43,25 @@
 
 ###############################################################################
 
+# 1st order Markov Chain
+
 from __future__ import division
 import csv
 from collections import defaultdict
 import datetime
 from fileinfo import filename, files
 
-shouldIgnoreRepetitions = True
-shouldIgnoreAddedOnly = True
-shouldPrintPredictions = False
-shouldSegmentData = False
-segmentTimeThreshold = 60 * 60000  # 60min or 1hr
-verbose = True
+shouldIgnoreRepetitions = True  # decides whether to ignore consecutive repetition in generated labels
+shouldIgnoreAddedOnly = True  # decides whether only the repetition in points added by the routing service is to be ignored
+shouldPrintPredictions = False  # decides whether predictions are printed to the screen during the test phase
+shouldSegmentData = False  # decides whether to segment the data for each day into trips based on the concept of stationary locations
+segmentTimeThreshold = 60 * 60000  # 60min or 1hr threshold for segmenting data into trips
+verbose = True  # decides whether to print the accuracy in each fold of cross-validation
 latLabel = 'latitude'
 longLabel = 'longitude'
 timestampLabel = 'timestamp'
 originalTextLabel = 'original-data'
-gridScale = 100
+gridScale = 100  # 100 is equivalent to truncating the lat/long values to the second place after decimal
 
 class LocationPrecitionModel:
     
@@ -86,22 +88,33 @@ class LocationPrecitionModel:
         self.shouldIgnoreAddedOnly = shouldIgnoreAddedOnly
     
     def predict(self, x):
+        """Predicts the next grid-id based on the current grid-id."""
+        
         maxProb = 0
         r = ''
+        # the following code calculates the probablity of each candidate next grid-id and finds the one with the maximum probability
         for y in self.next[x]:
             P = self.counts_bi[(x, y)] / self.counts_uni[x]
             if P > maxProb:
                 maxProb = P
                 r = y
-        if maxProb == 0:
+        if maxProb == 0:  # fallback
             r = self.mostFrequentlyVisited
         return r, maxProb
     
     def train(self, train_files):
+        """Trains the location prediction model with the training set provided as argument.
+        
+        train_files is a list. Each element of train_files is a list of type location-labels.
+        
+        """
+        
         last = '$'
         d = []
         for file in train_files:
             d = d + self.data[file]
+        # the following code calculates the counts required by the prediction model
+        # to calculate probabilities of candidate locations and make predictions
         for e in d:
             if e == "---":
                 last = '$'
@@ -117,6 +130,8 @@ class LocationPrecitionModel:
                 maxCount = self.counts_uni[e]
     
     def test(self, test_files):
+        """Returns the accuracy of the location prediction model once it has been trained."""
+        
         t = []
         for file in test_files:
             t = t + self.data[file]
@@ -136,6 +151,8 @@ class LocationPrecitionModel:
         return accuracy
     
     def readFiles(self):
+        """Reads the data files, extracts lat/long values from each row, and adds the data to the class."""
+        
         j = 0
         for i in self.files:
             d = []
@@ -175,18 +192,29 @@ class LocationPrecitionModel:
         self.indices = [self.fileDataDict[i] for i in self.files]
     
     def getLabel(self, latitude, longitude):
+        """Returns a string label for latitude-longitude values after truncating the values using the grid-scale"""
+        
         x = int(float(latitude) * self.gridScale) / gridScale
         y = int(float(longitude) * self.gridScale) / gridScale
         label = 'LAT' + str(x) + 'LON' + str(y)
         return label
     
     def resetTrainedModel(self):
+        """Resets the prediction model so that it can be trained again using a different dataset."""
+        
         self.counts_uni = defaultdict(int)
         self.counts_bi = defaultdict(int)
         self.next = defaultdict(set)
         self.mostFrequentlyVisited = ''
     
     def crossValidate(self, sequential=False):
+        """Runs a leave-one-out or a sequential cross-validation for the prediction algorithm on the dataset.
+        
+        sequential = False: leave-one-out cross-validation
+        sequential = True: for the xth day, use data from 1...(x-1) days for training the model and tha from the xth day for testng
+        
+        """
+        
         maxAccuracy = -1
         bestSet = []
         sets = []

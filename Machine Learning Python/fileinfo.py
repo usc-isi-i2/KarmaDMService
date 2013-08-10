@@ -43,5 +43,5 @@
 
 ###############################################################################
 
-filename = "data/860173015670486/sample/sample_data_%d.txt"
-files = range(1, 25)
+filename = "data/860173015670486/sample/sample_data_%d.txt"  # format of file names used for running prediction algorithms
+files = range(1, 25)  # file numbers correspond to day numbers for a particular user
