@@ -220,7 +220,6 @@ class LocationPrecitionModel:
         self.counts_bi = defaultdict(int)
         self.next = defaultdict(set)
         self.mostFrequentlyVisited = ''
-        self.accuracyList = []
     
     def crossValidate(self, sequential=False):
         """Runs a leave-one-out or a sequential cross-validation for the prediction algorithm on the dataset.
@@ -249,7 +248,6 @@ class LocationPrecitionModel:
             total = total + accuracy
             if self.verbose:
                 print "Pass no.:", passNum, "| Accuracy:", accuracy
-            self.accuracyList.append(accuracy)
             passNum = passNum + 1
         bestSetFiles = ([self.dataFileDict[i] for i in bestSet[0]], [self.dataFileDict[i] for i in bestSet[1]])
         cases = passNum - 1
