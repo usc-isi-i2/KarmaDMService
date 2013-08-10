@@ -216,6 +216,7 @@ class LocationPrecitionModel:
     def resetTrainedModel(self):
         """Resets the prediction model so that it can be trained again using a different dataset."""
         
+        self.counts_tri = defaultdict(int)
         self.counts_uni = defaultdict(int)
         self.counts_bi = defaultdict(int)
         self.next = defaultdict(set)
