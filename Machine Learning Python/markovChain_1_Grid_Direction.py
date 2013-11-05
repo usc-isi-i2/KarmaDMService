@@ -51,7 +51,7 @@ from collections import defaultdict
 from fileinfo import filename, files
 
 shouldIgnoreRepetitions = True  # decides whether to ignore consecutive repetition in generated labels
-shouldIgnoreAddedOnly = True  # decides whether only the repetition in points added by the routing service is to be ignored
+shouldIgnoreAddedOnly = False  # decides whether only the repetition in points added by the routing service is to be ignored
 shouldPrintPredictions = False  # decides whether predictions are printed to the screen during the test phase
 verbose = True  # decides whether to print the accuracy in each fold of cross-validation
 latLabel = 'latitude'
@@ -138,8 +138,8 @@ class LocationPrecitionModel:
                 correct = correct + 1
             if shouldPrintPredictions:
                 print t[i][0], t[i+1][0], "-->", predicted
-        if total == 0:
-            accuracy = 0.0
+        if total <= 5:  # days with not more than 5 points are not considered
+            return None
         else:
             accuracy = correct / total
         return accuracy
@@ -214,13 +214,14 @@ class LocationPrecitionModel:
             self.resetTrainedModel()
             self.train(train_files)
             accuracy = self.test(test_files)
-            if accuracy > maxAccuracy:
-                maxAccuracy = accuracy
-                bestSet = (train_files, test_files)
-            total = total + accuracy
-            if self.verbose:
-                print "Pass no.:", passNum, "| Accuracy:", accuracy
-            passNum = passNum + 1
+            if not accuracy is None:
+                if accuracy > maxAccuracy:
+                    maxAccuracy = accuracy
+                    bestSet = (train_files, test_files)
+                total = total + accuracy
+                if self.verbose:
+                    print "Pass no.:", passNum, "| Accuracy:", accuracy
+                passNum = passNum + 1
         bestSetFiles = ([self.dataFileDict[i] for i in bestSet[0]], [self.dataFileDict[i] for i in bestSet[1]])
         cases = passNum - 1
         if sequential:

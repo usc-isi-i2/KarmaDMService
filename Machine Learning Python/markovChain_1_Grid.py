@@ -52,7 +52,7 @@ import datetime
 from fileinfo import filename, files
 
 shouldIgnoreRepetitions = True  # decides whether to ignore consecutive repetition in generated labels
-shouldIgnoreAddedOnly = True  # decides whether only the repetition in points added by the routing service is to be ignored
+shouldIgnoreAddedOnly = False  # decides whether only the repetition in points added by the routing service is to be ignored
 shouldPrintPredictions = False  # decides whether predictions are printed to the screen during the test phase
 shouldSegmentData = False  # decides whether to segment the data for each day into trips based on the concept of stationary locations
 segmentTimeThreshold = 60 * 60000  # 60min or 1hr threshold for segmenting data into trips
@@ -144,10 +144,9 @@ class LocationPrecitionModel:
                 correct = correct + 1
             if shouldPrintPredictions:
                 print t[i], t[i+1], "-->", predicted
-        if total == 0:
-            accuracy = 0.0
-        else:
-            accuracy = correct / total
+        if total <= 5:  # days with not more than 5 points are not considered
+            return None
+        accuracy = correct / total
         return accuracy
     
     def readFiles(self):
@@ -228,13 +227,14 @@ class LocationPrecitionModel:
             self.resetTrainedModel()
             self.train(train_files)
             accuracy = self.test(test_files)
-            if accuracy > maxAccuracy:
-                maxAccuracy = accuracy
-                bestSet = (train_files, test_files)
-            total = total + accuracy
-            if self.verbose:
-                print "Pass no.:", passNum, "| Accuracy:", accuracy
-            passNum = passNum + 1
+            if not accuracy is None:
+                if accuracy > maxAccuracy:
+                    maxAccuracy = accuracy
+                    bestSet = (train_files, test_files)
+                total = total + accuracy
+                if self.verbose:
+                    print "Pass no.:", passNum, "| Accuracy:", accuracy
+                passNum = passNum + 1
         bestSetFiles = ([self.dataFileDict[i] for i in bestSet[0]], [self.dataFileDict[i] for i in bestSet[1]])
         cases = passNum - 1
         if sequential:
