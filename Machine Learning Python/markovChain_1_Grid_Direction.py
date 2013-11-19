@@ -59,10 +59,11 @@ longLabel = 'longitude'
 dirLabel = 'direction_of_movement'
 originalTextLabel = 'original-data'
 gridScale = 100  # 100 is equivalent to truncating the lat/long values to the second place after decimal
+minPointsOnADay = 5  # there should be at least these many no. of points in a day to be considered for testing
 
 class LocationPrecitionModel:
     
-    def __init__(self, files, filename, latLabel, longLabel, dirLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldIgnoreAddedOnly, verbose):
+    def __init__(self, files, filename, latLabel, longLabel, dirLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldIgnoreAddedOnly, minPointsOnADay, verbose):
         self.files = files
         self.filename = filename
         self.mostFrequentlyVisited = ''
@@ -81,6 +82,7 @@ class LocationPrecitionModel:
         self.originalTextLabel = originalTextLabel
         self.shouldIgnoreAddedOnly = shouldIgnoreAddedOnly
         self.gridScale = gridScale
+        self.minPointsOnADay = minPointsOnADay
     
     def predict(self, x, direction):
         """Predicts the next grid-id based on the current grid-id and the present direction-of-motion."""
@@ -138,7 +140,7 @@ class LocationPrecitionModel:
                 correct = correct + 1
             if shouldPrintPredictions:
                 print t[i][0], t[i+1][0], "-->", predicted
-        if total <= 5:  # days with not more than 5 points are not considered
+        if total <= self.minPointsOnADay:  # days with less than minPointsOnADay points are not considered
             return None
         else:
             accuracy = correct / total
@@ -254,7 +256,7 @@ class LocationPrecitionModel:
         print "\nTotal:", len(c)
 
 def main():
-    model = LocationPrecitionModel(files, filename, latLabel, longLabel, dirLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldIgnoreAddedOnly, verbose)
+    model = LocationPrecitionModel(files, filename, latLabel, longLabel, dirLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldIgnoreAddedOnly, minPointsOnADay, verbose)
     model.readFiles()
     print
     print "1 test file and remaining all training files:"

@@ -62,10 +62,11 @@ longLabel = 'longitude'
 timestampLabel = 'timestamp'
 originalTextLabel = 'original-data'
 gridScale = 100  # 100 is equivalent to truncating the lat/long values to the second place after decimal
+minPointsOnADay = 5  # there should be at least these many no. of points in a day to be considered for testing
 
 class LocationPrecitionModel:
     
-    def __init__(self, files, filename, latLabel, longLabel, timestampLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldSegmentData, shouldIgnoreAddedOnly, segmentTimeThreshold, verbose):
+    def __init__(self, files, filename, latLabel, longLabel, timestampLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldSegmentData, shouldIgnoreAddedOnly, segmentTimeThreshold, minPointsOnADay, verbose):
         self.files = files
         self.filename = filename
         self.mostFrequentlyVisited = ''
@@ -86,6 +87,7 @@ class LocationPrecitionModel:
         self.shouldSegmentData = shouldSegmentData
         self.segmentTimeThreshold = segmentTimeThreshold
         self.shouldIgnoreAddedOnly = shouldIgnoreAddedOnly
+        self.minPointsOnADay = minPointsOnADay
     
     def predict(self, x):
         """Predicts the next grid-id based on the current grid-id."""
@@ -144,7 +146,7 @@ class LocationPrecitionModel:
                 correct = correct + 1
             if shouldPrintPredictions:
                 print t[i], t[i+1], "-->", predicted
-        if total <= 5:  # days with not more than 5 points are not considered
+        if total <= self.minPointsOnADay:  # days with less than minPointsOnADay points are not considered
             return None
         accuracy = correct / total
         return accuracy
@@ -267,7 +269,7 @@ class LocationPrecitionModel:
         print "\nTotal:", len(c)
 
 def main():
-    model = LocationPrecitionModel(files, filename, latLabel, longLabel, timestampLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldSegmentData, shouldIgnoreAddedOnly, segmentTimeThreshold, verbose)
+    model = LocationPrecitionModel(files, filename, latLabel, longLabel, timestampLabel, originalTextLabel, gridScale, shouldIgnoreRepetitions, shouldSegmentData, shouldIgnoreAddedOnly, segmentTimeThreshold, minPointsOnADay, verbose)
     model.readFiles()
     print
     print "1 test file and remaining all training files:"
